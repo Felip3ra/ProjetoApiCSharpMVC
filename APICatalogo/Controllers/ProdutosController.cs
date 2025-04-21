@@ -20,60 +20,108 @@ namespace APICatalogo.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Produto>> Get()
         {
-            var produtos = _context.Produtos.ToList();
-            if(produtos is null)
+            try
             {
-                return NotFound("Produtos não encontrados");
+                var produtos = _context.Produtos.ToList();
+                if (produtos is null)
+                {
+                    return NotFound("Produtos não encontrados");
+                }
+                return produtos;
             }
-            return produtos;
+            catch (Exception)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+            
         }
         //Busca pelo ID informado
         [HttpGet("{id:int}", Name = "ObterProduto")]
-        public ActionResult<Produto> Get(int id) { 
-            var produto = _context.Produtos.FirstOrDefault(x => x.ProdutoId == id);
-            if (produto is null)
+        public ActionResult<Produto> Get(int id) {
+            try
             {
-                return NotFound("Produto não encontrado");
+                var produto = _context.Produtos.FirstOrDefault(x => x.ProdutoId == id);
+                if (produto is null)
+                {
+                    return NotFound("Produto não encontrado");
+                }
+                return produto;
             }
-            return produto;
+            catch (Exception)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+            
         }
 
         [HttpPost]
         public ActionResult Post(Produto produto) {
-            if (produto is null) {
-                return BadRequest();
-            }
-            _context.Produtos.Add(produto);//cria um contexto com o objeto criado
-            _context.SaveChanges();//Persiste os dados na tabela
+            try
+            {
+                if (produto is null)
+                {
+                    return BadRequest();
+                }
+                _context.Produtos.Add(produto);//cria um contexto com o objeto criado
+                _context.SaveChanges();//Persiste os dados na tabela
 
-            //é usada normalmente em um endpoint POST, e ela está fazendo algo muito legal e RESTful: depois de criar um recurso,
-            //ela retorna um HTTP 201 Created com o link para acessar esse novo recurso.
-            return new CreatedAtRouteResult("ObterProduto", new {id = produto.ProdutoId}, produto);
+                //é usada normalmente em um endpoint POST, e ela está fazendo algo muito legal e RESTful: depois de criar um recurso,
+                //ela retorna um HTTP 201 Created com o link para acessar esse novo recurso.
+                return new CreatedAtRouteResult("ObterProduto", new { id = produto.ProdutoId }, produto);
+            }
+            catch (Exception)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+            
         }
 
         [HttpPut("{id:int}")]
         public ActionResult Put(int id,Produto produto)
         {
-            if (id != produto.ProdutoId) {
-                return BadRequest();
-            }
-            _context.Entry(produto).State = EntityState.Modified;//Diz para o EF Core que o objeto deve ser atualizado no banco
-            _context.SaveChanges();
+            try
+            {
+                if (id != produto.ProdutoId)
+                {
+                    return BadRequest();
+                }
+                _context.Entry(produto).State = EntityState.Modified;//Diz para o EF Core que o objeto deve ser atualizado no banco
+                _context.SaveChanges();
 
-            return Ok(produto);
+                return Ok(produto);
+            }
+            catch (Exception)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+            
         }
 
         [HttpDelete("{id:int}")]
-        public ActionResult Delete(int id) { 
-            var produto = _context.Produtos.FirstOrDefault(x => x.ProdutoId == id);
+        public ActionResult Delete(int id) {
+            try
+            {
+                var produto = _context.Produtos.FirstOrDefault(x => x.ProdutoId == id);
 
-            if (produto is null) {
-                return NotFound("Produto não localizado...");
+                if (produto is null)
+                {
+                    return NotFound("Produto não localizado...");
+                }
+                _context.Produtos.Remove(produto);
+                _context.SaveChanges();
+
+                return Ok(produto);
             }
-            _context.Produtos.Remove(produto);
-            _context.SaveChanges();
+            catch (Exception)
+            {
 
-            return Ok(produto);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+            
         }
     }
 }

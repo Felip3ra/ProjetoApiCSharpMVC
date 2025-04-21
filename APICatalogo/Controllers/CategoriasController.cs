@@ -19,72 +19,121 @@ namespace APICatalogo.Controllers
         [HttpGet("produtos")]
         public ActionResult<IEnumerable<Categoria>> GetCategoriasProdutos()
         {
-            return _context.Categorias.Include(x => x.Produtos).ToList();
+            try
+            {
+                //return _context.Categorias.Include(x => x.Produtos).ToList();
+                return _context.Categorias.Include(x => x.Produtos).Where(x => x.CategoriaId <= 5).ToList();
+            }
+            catch (Exception)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+            
         }
         //O ActionResult permite que você retorne diferentes tipos de resposta HTTP, como 200 OK, 404 NotFound, etc.
         [HttpGet]
         public ActionResult<IEnumerable<Categoria>> Get()
         {
-            var categorias = _context.Categorias.ToList();
-            if (categorias is null)
+            try
             {
-                return NotFound("Produtos não encontrados");
+                var categorias = _context.Categorias.AsNoTracking().ToList();//diz pro Entity Framework não rastrear as entidades retornadas.
+                if (categorias is null)
+                {
+                    return NotFound("Produtos não encontrados");
+                }
+                return categorias;
             }
-            return categorias;
+            catch (Exception ex) { 
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+            
         }
         //Busca pelo ID informado
         [HttpGet("{id:int}", Name = "ObterCategoria")]
         public ActionResult<Categoria> Get(int id)
         {
-            var categoria = _context.Categorias.FirstOrDefault(x => x.CategoriaId == id);
-            if (categoria is null)
+            try
             {
-                return NotFound("Produto não encontrado");
+                var categoria = _context.Categorias.FirstOrDefault(x => x.CategoriaId == id);
+                if (categoria is null)
+                {
+                    return NotFound("Produto não encontrado");
+                }
+                return categoria;
             }
-            return categoria;
+            catch (Exception ex) {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+            
         }
 
         [HttpPost]
         public ActionResult Post(Categoria categoria)
         {
-            if (categoria is null)
+            try
             {
-                return BadRequest();
-            }
-            _context.Categorias.Add(categoria);//cria um contexto com o objeto criado
-            _context.SaveChanges();//Persiste os dados na tabela
+                if (categoria is null)
+                {
+                    return BadRequest();
+                }
+                _context.Categorias.Add(categoria);//cria um contexto com o objeto criado
+                _context.SaveChanges();//Persiste os dados na tabela
 
-            //é usada normalmente em um endpoint POST, e ela está fazendo algo muito legal e RESTful: depois de criar um recurso,
-            //ela retorna um HTTP 201 Created com o link para acessar esse novo recurso.
-            return new CreatedAtRouteResult("ObterCategoria", new { id = categoria.CategoriaId }, categoria);
+                //é usada normalmente em um endpoint POST, e ela está fazendo algo muito legal e RESTful: depois de criar um recurso,
+                //ela retorna um HTTP 201 Created com o link para acessar esse novo recurso.
+                return new CreatedAtRouteResult("ObterCategoria", new { id = categoria.CategoriaId }, categoria);
+            }
+            catch (Exception ex) {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+            
         }
 
         [HttpPut("{id:int}")]
         public ActionResult Put(int id, Categoria categoria)
         {
-            if (id != categoria.CategoriaId)
+            try
             {
-                return BadRequest();
-            }
-            _context.Entry(categoria).State = EntityState.Modified;//Diz para o EF Core que o objeto deve ser atualizado no banco
-            _context.SaveChanges();
+                if (id != categoria.CategoriaId)
+                {
+                    return BadRequest();
+                }
+                _context.Entry(categoria).State = EntityState.Modified;//Diz para o EF Core que o objeto deve ser atualizado no banco
+                _context.SaveChanges();
 
-            return Ok(categoria);
+                return Ok(categoria);
+            }
+            catch (Exception)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+            
         }
 
         [HttpDelete("{id:int}")]
         public ActionResult Delete(int id)
         {
-            var categoria = _context.Categorias.FirstOrDefault(x => x.CategoriaId == id);
-
-            if (categoria is null)
+            try
             {
-                return NotFound("Produto não localizado...");
-            }
-            _context.Categorias.Remove(categoria);
-            _context.SaveChanges();
+                var categoria = _context.Categorias.FirstOrDefault(x => x.CategoriaId == id);
 
-            return Ok(categoria);
+                if (categoria is null)
+                {
+                    return NotFound("Produto não localizado...");
+                }
+                _context.Categorias.Remove(categoria);
+                _context.SaveChanges();
+
+                return Ok(categoria);
+            }
+            catch (Exception)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+            
         }
     }
 }
