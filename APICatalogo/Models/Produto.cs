@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace APICatalogo.Models;
 
@@ -25,5 +26,7 @@ public class Produto
     public DateTime DataCadastro { get; set; }
     //mapeia a coluna de categoria
     public int CategoriaId { get; set; }
+    [JsonIgnore] //ignora a serializacao
     public Categoria? Categoria { get; set; }
+
 }
