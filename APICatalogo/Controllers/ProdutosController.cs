@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace APICatalogo.Controllers
 {
     //Esse atributo indica que esse método responde a requisições HTTP GET. Ou seja, se alguém fizer um GET para essa rota (ex: https://localhost:5001/api/produtos), esse método será executado.
-    [Route("api/[controller]")]
+    [Route("api/[controller]")]// /produtos -> padrao para rotas nao nomeadas
     [ApiController]
     public class ProdutosController : ControllerBase
     {
@@ -17,6 +17,7 @@ namespace APICatalogo.Controllers
         }
 
         //O ActionResult permite que você retorne diferentes tipos de resposta HTTP, como 200 OK, 404 NotFound, etc.
+        // /api/Produtos
         [HttpGet]
         public ActionResult<IEnumerable<Produto>> Get()
         {
@@ -36,8 +37,14 @@ namespace APICatalogo.Controllers
             }
             
         }
+        [HttpGet("{valor:alpha:length(5)}")]
+        public async Task<ActionResult<IEnumerable<Produto>>> Get2(string valor) {
+            var teste = valor;
+            return await _context.Produtos.AsNoTracking().ToListAsync();
+        }
         //Busca pelo ID informado
-        [HttpGet("{id:int}", Name = "ObterProduto")]
+        // /api/Produtos/id
+        [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
         public ActionResult<Produto> Get(int id) {
             try
             {
@@ -55,7 +62,7 @@ namespace APICatalogo.Controllers
             }
             
         }
-
+        // /api/Produtos
         [HttpPost]
         public ActionResult Post(Produto produto) {
             try
@@ -78,7 +85,7 @@ namespace APICatalogo.Controllers
             }
             
         }
-
+        // /api/Produtos/id
         [HttpPut("{id:int}")]
         public ActionResult Put(int id,Produto produto)
         {
