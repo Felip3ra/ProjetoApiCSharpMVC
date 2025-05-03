@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using APICatalogo.Contexto;
 using System.Text.Json.Serialization;
+using APICatalogo.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -19,6 +20,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(mySqlConnection);
 });
+
+builder.Services.AddTransient<IMeuServico, MeuServico>();
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.
