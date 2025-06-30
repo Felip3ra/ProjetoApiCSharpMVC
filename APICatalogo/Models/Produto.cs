@@ -10,17 +10,17 @@ public class Produto
     //informa chave primaria tendo o Id na propriedade
     [Key]
     public int ProdutoId { get; set; }
-    [Required]
+    [Required(ErrorMessage = "O nome é obrigatório")]
     [StringLength(80)]
     public string Nome { get; set; }
     [Required]
-    [StringLength(80)]
+    [StringLength(10,ErrorMessage ="A descricao deve conter no maximo {1} caracteres", MinimumLength = 5)]
     public string? Descricao {  get; set; }
     [Required]
-    [Column(TypeName = "decimal(10,2)")]
+    [Range(1,1000,ErrorMessage ="O preco deve estar entre {1} e {2}")]
     public decimal Preco {  get; set; }
     [Required]
-    [StringLength(300)]
+    [StringLength(300, MinimumLength = 10)]
     public string? ImagemUrl { get; set; }
     public float Estoque { get; set; }
     public DateTime DataCadastro { get; set; }
