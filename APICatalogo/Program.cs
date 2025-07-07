@@ -15,6 +15,14 @@ builder.Services.AddSwaggerGen();
 
 //Pega a string de conexao
 string mySqlConnection = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// Lê o valor da chave "chave1" diretamente do arquivo de configuração (por exemplo, appsettings.json)
+var valor1 = builder.Configuration["chave1"];
+
+// Lê o valor da chave "chave2" que está dentro da seção "secao1" no arquivo de configuração
+var valor2 = builder.Configuration["secao1:chave2"];
+
+
 //configura a conexao com o provedor do banco de dados
 builder.Services.AddDbContext<AppDbContext>(options =>
 {

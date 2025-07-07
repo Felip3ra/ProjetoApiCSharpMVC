@@ -11,12 +11,35 @@ namespace APICatalogo.Controllers
     [ApiController]
     public class CategoriasController : ControllerBase
     {
+        // Campo somente leitura para o contexto do banco de dados (injeção de dependência do Entity Framework)
         private readonly AppDbContext _context;
-        public CategoriasController(AppDbContext context)
+
+        // Campo somente leitura para acessar configurações definidas no appsettings.json ou outros provedores
+        private readonly IConfiguration _configuration;
+
+        // Construtor do controller que recebe e armazena as dependências (injeção de dependência)
+        public CategoriasController(AppDbContext context, IConfiguration configuration)
         {
-            _context = context;
+            _context = context;                // Armazena o contexto do banco de dados
+            _configuration = configuration;    // Armazena a configuração da aplicação
         }
 
+        // Define uma rota HTTP GET com o nome "LerArquivosDeConfiguracao"
+        [HttpGet("LerArquivosDeConfiguracao")]
+        public string GetValores()
+        {
+            // Lê o valor da chave "chave1" do arquivo de configuração (ex: appsettings.json)
+            var valor1 = _configuration["chave1"];
+
+            // Lê o valor da chave "chave2"
+            var valor2 = _configuration["chave2"];
+
+            // Lê o valor da chave "chave2" que está dentro da seção "secao1"
+            var secao1 = _configuration["secao1:chave2"];
+
+            // Retorna os valores lidos formatados em uma string
+            return $"Chave1 = {valor1} \nChave2 = {valor2} \nSecão1 => Chave2 = {secao1}";
+        }
         [HttpGet("UsandoFromServices/{nome}")]
         public ActionResult<string> GetSaudacaoFromServices([FromServices] IMeuServico meuservico, string nome)
         {
