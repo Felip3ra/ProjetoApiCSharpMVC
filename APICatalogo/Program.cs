@@ -3,6 +3,7 @@ using APICatalogo.Contexto;
 using System.Text.Json.Serialization;
 using APICatalogo.Services;
 using APICatalogo.Extensions;
+using APICatalogo.Filters;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -29,6 +30,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(mySqlConnection);
 });
+
+builder.Services.AddScoped<ApiLoggingFilter>();
 
 builder.Services.AddTransient<IMeuServico, MeuServico>();
 
@@ -59,10 +62,10 @@ app.Use(async (context, next) =>
 app.MapControllers();
 
 // Middleware final — será chamado **somente se nenhuma rota anterior for correspondida**
-app.Run(async (context) =>
-{
-    await context.Response.WriteAsync("Middleware final");
-});
+//app.Run(async (context) =>
+//{
+//    await context.Response.WriteAsync("Middleware final");
+//});
 
 // Inicia a aplicação ASP.NET (não se deve chamar `app.Run()` duas vezes)
 app.Run();

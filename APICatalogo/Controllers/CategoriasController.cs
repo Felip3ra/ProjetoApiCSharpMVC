@@ -1,4 +1,5 @@
 ﻿using APICatalogo.Contexto;
+using APICatalogo.Filters;
 using APICatalogo.Models;
 using APICatalogo.Services;
 using Microsoft.AspNetCore.Http;
@@ -24,6 +25,8 @@ namespace APICatalogo.Controllers
             _configuration = configuration;    // Armazena a configuração da aplicação
         }
 
+
+       
         // Define uma rota HTTP GET com o nome "LerArquivosDeConfiguracao"
         [HttpGet("LerArquivosDeConfiguracao")]
         public string GetValores()
@@ -63,7 +66,8 @@ namespace APICatalogo.Controllers
         }
         //O ActionResult permite que você retorne diferentes tipos de resposta HTTP, como 200 OK, 404 NotFound, etc.
         [HttpGet]
-        public ActionResult<IEnumerable<Categoria>> Get()
+        [ServiceFilter(typeof(ApiLoggingFilter))]
+        public async Task<ActionResult<IEnumerable<Categoria>>> Get()
         {
             try
             {
