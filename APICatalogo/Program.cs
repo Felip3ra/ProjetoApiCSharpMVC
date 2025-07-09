@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using APICatalogo.Contexto;
 using System.Text.Json.Serialization;
 using APICatalogo.Services;
+using APICatalogo.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -37,6 +38,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();//Middleware swagger
     app.UseSwaggerUI();//Middleware swagger UI
+    app.ConfigureExceptionHandler();
 }
 
 app.UseHttpsRedirection();
