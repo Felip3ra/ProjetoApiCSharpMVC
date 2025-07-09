@@ -35,14 +35,33 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwagger();//Middleware swagger
+    app.UseSwaggerUI();//Middleware swagger UI
 }
 
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
 
+// Adiciona um middleware customizado na pipeline de requisições
+app.Use(async (context, next) =>
+{
+    // Código aqui é executado **antes** de passar para o próximo middleware (por exemplo, log de request)
+
+    await next(context); // Chama o próximo middleware na pipeline
+
+    // Código aqui é executado **depois** que o próximo middleware terminou (por exemplo, log de resposta)
+});
+
+// Mapeia os controllers da aplicação (faz com que rotas como [HttpGet] funcionem)
 app.MapControllers();
 
+// Middleware final — será chamado **somente se nenhuma rota anterior for correspondida**
+app.Run(async (context) =>
+{
+    await context.Response.WriteAsync("Middleware final");
+});
+
+// Inicia a aplicação ASP.NET (não se deve chamar `app.Run()` duas vezes)
 app.Run();
+
