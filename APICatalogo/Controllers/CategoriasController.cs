@@ -18,11 +18,14 @@ namespace APICatalogo.Controllers
         // Campo somente leitura para acessar configurações definidas no appsettings.json ou outros provedores
         private readonly IConfiguration _configuration;
 
+        private readonly ILogger _logger;
+
         // Construtor do controller que recebe e armazena as dependências (injeção de dependência)
-        public CategoriasController(AppDbContext context, IConfiguration configuration)
+        public CategoriasController(AppDbContext context, IConfiguration configuration, ILogger<CategoriasController> logger)
         {
             _context = context;                // Armazena o contexto do banco de dados
             _configuration = configuration;    // Armazena a configuração da aplicação
+            _logger = logger;
         }
 
 
@@ -55,6 +58,7 @@ namespace APICatalogo.Controllers
             try
             {
                 //return _context.Categorias.Include(x => x.Produtos).ToList();
+                _logger.LogInformation("==============GET API/CATEGORIAS/PRODUTOS ===================");
                 return _context.Categorias.Include(x => x.Produtos).Where(x => x.CategoriaId <= 5).ToList();
             }
             catch (Exception)
