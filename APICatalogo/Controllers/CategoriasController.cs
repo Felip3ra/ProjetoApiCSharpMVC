@@ -1,6 +1,7 @@
 ﻿using APICatalogo.Contexto;
 using APICatalogo.Filters;
 using APICatalogo.Models;
+using APICatalogo.Repositories;
 using APICatalogo.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,8 +13,8 @@ namespace APICatalogo.Controllers
     [ApiController]
     public class CategoriasController : ControllerBase
     {
-        // Campo somente leitura para o contexto do banco de dados (injeção de dependência do Entity Framework)
-        private readonly AppDbContext _context;
+        
+        private readonly ICategoriaRepository _repository;
 
         // Campo somente leitura para acessar configurações definidas no appsettings.json ou outros provedores
         private readonly IConfiguration _configuration;
@@ -21,9 +22,9 @@ namespace APICatalogo.Controllers
         private readonly ILogger _logger;
 
         // Construtor do controller que recebe e armazena as dependências (injeção de dependência)
-        public CategoriasController(AppDbContext context, IConfiguration configuration, ILogger<CategoriasController> logger)
+        public CategoriasController(ICategoriaRepository repository, IConfiguration configuration, ILogger<CategoriasController> logger)
         {
-            _context = context;                // Armazena o contexto do banco de dados
+            _repository = repository;                
             _configuration = configuration;    // Armazena a configuração da aplicação
             _logger = logger;
         }
@@ -52,40 +53,31 @@ namespace APICatalogo.Controllers
             return meuservico.Saudacao(nome);
         }
 
-        [HttpGet("produtos")]
-        public ActionResult<IEnumerable<Categoria>> GetCategoriasProdutos()
-        {
-            try
-            {
-                //return _context.Categorias.Include(x => x.Produtos).ToList();
-                _logger.LogInformation("==============GET API/CATEGORIAS/PRODUTOS ===================");
-                return _context.Categorias.Include(x => x.Produtos).Where(x => x.CategoriaId <= 5).ToList();
-            }
-            catch (Exception)
-            {
+        //[HttpGet("produtos")]
+        //public ActionResult<IEnumerable<Categoria>> GetCategoriasProdutos()
+        //{
+        //    try
+        //    {
+        //        //return _context.Categorias.Include(x => x.Produtos).ToList();
+        //        _logger.LogInformation("==============GET API/CATEGORIAS/PRODUTOS ===================");
+        //        return _context.Categorias.Include(x => x.Produtos).Where(x => x.CategoriaId <= 5).ToList();
+        //    }
+        //    catch (Exception)
+        //    {
 
-                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
-            }
+        //        return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+        //    }
             
-        }
+        //}
         //O ActionResult permite que você retorne diferentes tipos de resposta HTTP, como 200 OK, 404 NotFound, etc.
         [HttpGet]
         [ServiceFilter(typeof(ApiLoggingFilter))]
-        public async Task<ActionResult<IEnumerable<Categoria>>> Get()
+        public ActionResult<IEnumerable<Categoria>> Get()
         {
-            try
-            {
-                var categorias = _context.Categorias.AsNoTracking().ToList();//diz pro Entity Framework não rastrear as entidades retornadas.
-                if (categorias is null)
-                {
-                    return NotFound("Produtos não encontrados");
-                }
-                return categorias;
-            }
-            catch (Exception ex) { 
-                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
-            }
-            
+            var categorias = _repository.GetCategorias();
+            return Ok(categorias);
+
+
         }
         //Busca pelo ID informado
         [HttpGet("{id:int}", Name = "ObterCategoria")]
@@ -93,12 +85,12 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                var categoria = _context.Categorias.FirstOrDefault(x => x.CategoriaId == id);
+                var categoria = _repository.GetCategoria(id);
                 if (categoria is null)
                 {
                     return NotFound("Produto não encontrado");
                 }
-                return categoria;
+                return Ok(categoria);
             }
             catch (Exception ex) {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
@@ -115,12 +107,10 @@ namespace APICatalogo.Controllers
                 {
                     return BadRequest();
                 }
-                _context.Categorias.Add(categoria);//cria um contexto com o objeto criado
-                _context.SaveChanges();//Persiste os dados na tabela
-
+                var CategoriaCriada = _repository.Create(categoria);
                 //é usada normalmente em um endpoint POST, e ela está fazendo algo muito legal e RESTful: depois de criar um recurso,
                 //ela retorna um HTTP 201 Created com o link para acessar esse novo recurso.
-                return new CreatedAtRouteResult("ObterCategoria", new { id = categoria.CategoriaId }, categoria);
+                return new CreatedAtRouteResult("ObterCategoria", new { id = CategoriaCriada.CategoriaId }, CategoriaCriada);
             }
             catch (Exception ex) {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
@@ -137,8 +127,7 @@ namespace APICatalogo.Controllers
                 {
                     return BadRequest();
                 }
-                _context.Entry(categoria).State = EntityState.Modified;//Diz para o EF Core que o objeto deve ser atualizado no banco
-                _context.SaveChanges();
+               _repository.Update(categoria);
 
                 return Ok(categoria);
             }
@@ -155,16 +144,15 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                var categoria = _context.Categorias.FirstOrDefault(x => x.CategoriaId == id);
+                var categoria = _repository.GetCategoria(id);
 
                 if (categoria is null)
                 {
                     return NotFound("Produto não localizado...");
                 }
-                _context.Categorias.Remove(categoria);
-                _context.SaveChanges();
+                var CategoriaExcluida = _repository.Delete(id);
 
-                return Ok(categoria);
+                return Ok(CategoriaExcluida);
             }
             catch (Exception)
             {
