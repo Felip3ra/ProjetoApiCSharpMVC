@@ -14,7 +14,7 @@ namespace APICatalogo.Controllers
     public class CategoriasController : ControllerBase
     {
         
-        private readonly ICategoriaRepository _repository;
+        private readonly IRepository<Categoria> _repository;
 
         // Campo somente leitura para acessar configurações definidas no appsettings.json ou outros provedores
         private readonly IConfiguration _configuration;
@@ -74,7 +74,7 @@ namespace APICatalogo.Controllers
         [ServiceFilter(typeof(ApiLoggingFilter))]
         public ActionResult<IEnumerable<Categoria>> Get()
         {
-            var categorias = _repository.GetCategorias();
+            var categorias = _repository.GetAll();
             return Ok(categorias);
 
 
@@ -85,7 +85,7 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                var categoria = _repository.GetCategoria(id);
+                var categoria = _repository.Get(x => x.CategoriaId == id);
                 if (categoria is null)
                 {
                     return NotFound("Produto não encontrado");
@@ -98,25 +98,25 @@ namespace APICatalogo.Controllers
             
         }
 
-        [HttpPost]
-        public ActionResult Post(Categoria categoria)
-        {
-            try
-            {
-                if (categoria is null)
-                {
-                    return BadRequest();
-                }
-                var CategoriaCriada = _repository.Create(categoria);
-                //é usada normalmente em um endpoint POST, e ela está fazendo algo muito legal e RESTful: depois de criar um recurso,
-                //ela retorna um HTTP 201 Created com o link para acessar esse novo recurso.
-                return new CreatedAtRouteResult("ObterCategoria", new { id = CategoriaCriada.CategoriaId }, CategoriaCriada);
-            }
-            catch (Exception ex) {
-                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
-            }
+        //[HttpPost]
+        //public ActionResult Post(Categoria categoria)
+        //{
+        //    try
+        //    {
+        //        if (categoria is null)
+        //        {
+        //            return BadRequest();
+        //        }
+        //        var CategoriaCriada = _repository.Create(categoria);
+        //        //é usada normalmente em um endpoint POST, e ela está fazendo algo muito legal e RESTful: depois de criar um recurso,
+        //        //ela retorna um HTTP 201 Created com o link para acessar esse novo recurso.
+        //        return new CreatedAtRouteResult("ObterCategoria", new { id = CategoriaCriada.CategoriaId }, CategoriaCriada);
+        //    }
+        //    catch (Exception ex) {
+        //        return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+        //    }
             
-        }
+        //}
 
         [HttpPut("{id:int}")]
         public ActionResult Put(int id, Categoria categoria)
@@ -144,13 +144,13 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                var categoria = _repository.GetCategoria(id);
+                var categoria = _repository.Get(x => x.CategoriaId == id);
 
                 if (categoria is null)
                 {
                     return NotFound("Produto não localizado...");
                 }
-                var CategoriaExcluida = _repository.Delete(id);
+                var CategoriaExcluida = _repository.Delete(categoria);
 
                 return Ok(CategoriaExcluida);
             }
