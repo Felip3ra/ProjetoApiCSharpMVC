@@ -64,7 +64,7 @@ public class Produto : IValidatableObject
 
     // Impede que a propriedade seja incluída na resposta JSON (evita loops de serialização)
     [JsonIgnore]
-    public CategoriaDTO? Categoria { get; set; } // Propriedade de navegação
+    public Categoria? Categoria { get; set; } // Propriedade de navegação
 
     // Método da interface IValidatableObject para validações personalizadas
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

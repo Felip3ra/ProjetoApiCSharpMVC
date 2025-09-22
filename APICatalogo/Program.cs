@@ -6,6 +6,7 @@ using APICatalogo.Extensions;
 using APICatalogo.Filters;
 using APICatalogo.Logging;
 using APICatalogo.Repositories;
+using APICatalogo.DTOs.Mappings;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -57,6 +58,8 @@ builder.Services.AddControllers(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
+
+builder.Services.AddAutoMapper(typeof(ProdutoDTOMappingProfile));
 
 var app = builder.Build();
 // Configure the HTTP request pipeline.

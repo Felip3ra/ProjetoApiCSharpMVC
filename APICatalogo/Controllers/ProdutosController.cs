@@ -1,6 +1,8 @@
 ﻿using APICatalogo.Contexto;
+using APICatalogo.DTOs;
 using APICatalogo.Models;
 using APICatalogo.Repositories;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,14 +14,15 @@ namespace APICatalogo.Controllers
     public class ProdutosController : ControllerBase
     {
         private readonly IUnityOfWork _unityOfWork;
-
-        public ProdutosController(IUnityOfWork unityOfWork)
+        private readonly IMapper _mapper;
+        public ProdutosController(IUnityOfWork unityOfWork, IMapper mapper)
         {
             _unityOfWork = unityOfWork;
+            _mapper = mapper;
         }
 
         [HttpGet("produtos/{id}")]
-        public ActionResult<IEnumerable<Produto>> GetProdutosPorCategoria(int id)
+        public ActionResult<IEnumerable<ProdutoDTO>> GetProdutosPorCategoria(int id)
         {
             try
             {
@@ -28,7 +31,9 @@ namespace APICatalogo.Controllers
                 {
                     return NotFound("Produtos não encontrados");
                 }
-                return Ok(produtos);
+                //var destino = _mapper.Map<ProdutoDTO>(origem);
+                var produtosDto = _mapper.Map<IEnumerable<ProdutoDTO>>(produtos);
+                return Ok(produtosDto);
             }
             catch (Exception)
             {
@@ -38,7 +43,7 @@ namespace APICatalogo.Controllers
         //O ActionResult permite que você retorne diferentes tipos de resposta HTTP, como 200 OK, 404 NotFound, etc.
         // /api/Produtos
         [HttpGet]
-        public ActionResult<IEnumerable<Produto>> Get()
+        public ActionResult<IEnumerable<ProdutoDTO>> Get()
         {
             try
             {
@@ -64,7 +69,7 @@ namespace APICatalogo.Controllers
         //Busca pelo ID informado
         // /api/Produtos/id
         [HttpGet("{id:int:min(1)}", Name = "ObterProduto")]
-        public ActionResult<Produto> Get(int id) {
+        public ActionResult<ProdutoDTO> Get(int id) {
             try
             {
                 var produto = _unityOfWork.ProdutoRepository.Get(x => x.ProdutoId == id);
@@ -72,7 +77,8 @@ namespace APICatalogo.Controllers
                 {
                     return NotFound("Produto não encontrado");
                 }
-                return Ok(produto);
+                var produtoDto = _mapper.Map<ProdutoDTO>(produto);
+                return Ok(produtoDto);
             }
             catch (Exception)
             {
@@ -83,17 +89,20 @@ namespace APICatalogo.Controllers
         }
         //// /api/Produtos
         [HttpPost]
-        public ActionResult Post(Produto produto)
+        public ActionResult<ProdutoDTO> Post(ProdutoDTO produtoDto)
         {
             try
             {
-                if (produto is null)
+                if (produtoDto is null)
                 {
                     return BadRequest();
                 }
+                var produto = _mapper.Map<Produto>(produtoDto);//mapeia o DTO para a entidade
+
                 var NovoProduto = _unityOfWork.ProdutoRepository.Add(produto);//cria um contexto com o objeto criado
                 _unityOfWork.Commit();
 
+                var novoProdutoDto = _mapper.Map<ProdutoDTO>(NovoProduto);//mapeia a entidade para o DTO
                 //é usada normalmente em um endpoint POST, e ela está fazendo algo muito legal e RESTful: depois de criar um recurso,
                 //ela retorna um HTTP 201 Created com o link para acessar esse novo recurso.
                 return new CreatedAtRouteResult("ObterProduto", new { id = NovoProduto.ProdutoId }, NovoProduto);
@@ -107,17 +116,21 @@ namespace APICatalogo.Controllers
         }
         // /api/Produtos/id
         [HttpPut("{id:int}")]
-        public ActionResult Put(int id,Produto produto)
+        public ActionResult<ProdutoDTO> Put(int id, ProdutoDTO produtoDto)
         {
             try
             {
-                if (id != produto.ProdutoId)
+                if (id != produtoDto.ProdutoId)
                 {
                     return BadRequest();
                 }
+                var produto = _mapper.Map<Produto>(produtoDto);
+
                 var produtoAtualizado = _unityOfWork.ProdutoRepository.Update(produto);
                 _unityOfWork.Commit();
-                return Ok(produtoAtualizado);
+
+                var produtoAtualizadoDto = _mapper.Map<ProdutoDTO>(produtoAtualizado);
+                return Ok(produtoAtualizadoDto);
             }
             catch (Exception)
             {
@@ -128,7 +141,7 @@ namespace APICatalogo.Controllers
         }
 
         [HttpDelete("{id:int}")]
-        public ActionResult Delete(int id) {
+        public ActionResult<ProdutoDTO> Delete(int id) {
             try
             {
                 var produto = _unityOfWork.ProdutoRepository.Get(x => x.ProdutoId == id);
@@ -138,7 +151,8 @@ namespace APICatalogo.Controllers
                 }
                 var produtoDeletado = _unityOfWork.ProdutoRepository.Delete(produto);
                 _unityOfWork.Commit();
-                return Ok();
+                var produtoDeletadoDto = _mapper.Map<ProdutoDTO>(produto);
+                return Ok(produtoDeletadoDto);
 
             }
             catch (Exception)
