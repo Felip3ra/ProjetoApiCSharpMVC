@@ -1,5 +1,6 @@
 ﻿using APICatalogo.Contexto;
 using APICatalogo.DTOs;
+using APICatalogo.DTOs.Mappings;
 using APICatalogo.Filters;
 using APICatalogo.Models;
 using APICatalogo.Repositories;
@@ -79,17 +80,9 @@ namespace APICatalogo.Controllers
             {
                 return NotFound("Categorias não encontradas");
             }
-            var categoriasDTO = new List<CategoriaDTO>();
-            foreach (var item in categorias)
-            {
-                categoriasDTO.Add(new CategoriaDTO
-                {
-                    CategoriaId = item.CategoriaId,
-                    Nome = item.Nome,
-                    ImagemUrl = item.ImagemUrl
-                });
-            }
-            return Ok(categoriasDTO);
+            
+            var categoriasDto = categorias.ToCategoriaDTOList();
+            return Ok(categoriasDto);
 
 
         }
@@ -104,13 +97,8 @@ namespace APICatalogo.Controllers
                 {
                     return NotFound("Produto não encontrado");
                 }
-                var categoriaDTO = new CategoriaDTO
-                {
-                    CategoriaId = categoria.CategoriaId,
-                    Nome = categoria.Nome,
-                    ImagemUrl = categoria.ImagemUrl
-                };
-                return Ok(categoriaDTO);
+                var categoriaDto = categoria.ToCategoriaDTO();
+                return Ok(categoriaDto);
             }
             catch (Exception ex) {
                 return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
@@ -128,21 +116,11 @@ namespace APICatalogo.Controllers
                     return BadRequest();
                 }
 
-                var categoria = new Categoria()
-                {
-                    CategoriaId = categoriaDto.CategoriaId,
-                    Nome = categoriaDto.Nome,
-                    ImagemUrl = categoriaDto.ImagemUrl
-                };
+                var categoria = categoriaDto.ToCategoria();
                 var CategoriaCriada = _unityOfWork.CategoriaRepository.Add(categoria);
 
-                var NovacategoriaDTO = new CategoriaDTO
-                {
-                    CategoriaId = categoria.CategoriaId,
-                    Nome = categoria.Nome,
-                    ImagemUrl = categoria.ImagemUrl
-                };
-                
+                var NovacategoriaDTO = CategoriaCriada.ToCategoriaDTO();
+
                 _unityOfWork.Commit();
                 //é usada normalmente em um endpoint POST, e ela está fazendo algo muito legal e RESTful: depois de criar um recurso,
                 //ela retorna um HTTP 201 Created com o link para acessar esse novo recurso.
@@ -165,22 +143,15 @@ namespace APICatalogo.Controllers
                     return BadRequest();
                 }
 
-                var categoria = new Categoria()
-                {
-                    CategoriaId = categoriaDto.CategoriaId,
-                    Nome = categoriaDto.Nome,
-                    ImagemUrl = categoriaDto.ImagemUrl
-                };
+                var categoria = categoriaDto.ToCategoria();
+             
 
-                _unityOfWork.CategoriaRepository.Update(categoria);
+            
+
+                var categoriaAtualizada = _unityOfWork.CategoriaRepository.Update(categoria);
                 _unityOfWork.Commit();
 
-                var NovacategoriaDTO = new CategoriaDTO
-                {
-                    CategoriaId = categoria.CategoriaId,
-                    Nome = categoria.Nome,
-                    ImagemUrl = categoria.ImagemUrl
-                };
+                var NovacategoriaDTO = categoriaAtualizada.ToCategoriaDTO();
                 return Ok(NovacategoriaDTO);
             }
             catch (Exception)
@@ -204,7 +175,8 @@ namespace APICatalogo.Controllers
                 }
                 var CategoriaExcluida = _unityOfWork.CategoriaRepository.Delete(categoria);
                 _unityOfWork.Commit();
-                return Ok(CategoriaExcluida);
+                var categoriaExcluidaDto = CategoriaExcluida.ToCategoriaDTO();
+                return Ok(categoriaExcluidaDto);
             }
             catch (Exception)
             {
