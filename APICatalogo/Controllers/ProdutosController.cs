@@ -11,19 +11,19 @@ namespace APICatalogo.Controllers
     [ApiController]
     public class ProdutosController : ControllerBase
     {
-        private readonly IProdutoRepository _produtoRepository;
-        private readonly IRepository<Produto> _repository;
-        public ProdutosController(IProdutoRepository produtoRepository, IRepository<Produto> repository)
+        private readonly IUnityOfWork _unityOfWork;
+
+        public ProdutosController(IUnityOfWork unityOfWork)
         {
-            _repository = repository;
-            _produtoRepository = produtoRepository; 
+            _unityOfWork = unityOfWork;
         }
+
         [HttpGet("produtos/{id}")]
         public ActionResult<IEnumerable<Produto>> GetProdutosPorCategoria(int id)
         {
             try
             {
-                var produtos = _produtoRepository.GetProdutosPorCategoria(id).ToList();
+                var produtos = _unityOfWork.ProdutoRepository.GetProdutosPorCategoria(id);
                 if (produtos is null)
                 {
                     return NotFound("Produtos não encontrados");
@@ -42,7 +42,7 @@ namespace APICatalogo.Controllers
         {
             try
             {
-                var produtos = _repository.GetAll();
+                var produtos = _unityOfWork.ProdutoRepository.GetAll();
                 if (produtos is null)
                 {
                     return NotFound("Produtos não encontrados");
@@ -67,7 +67,7 @@ namespace APICatalogo.Controllers
         public ActionResult<Produto> Get(int id) {
             try
             {
-                var produto = _repository.Get(x => x.ProdutoId == id);
+                var produto = _unityOfWork.ProdutoRepository.Get(x => x.ProdutoId == id);
                 if (produto is null)
                 {
                     return NotFound("Produto não encontrado");
@@ -82,28 +82,29 @@ namespace APICatalogo.Controllers
             
         }
         //// /api/Produtos
-        //[HttpPost]
-        //public ActionResult Post(Produto produto) {
-        //    try
-        //    {
-        //        if (produto is null)
-        //        {
-        //            return BadRequest();
-        //        }
-        //        var NovoProduto = _repository.Create(produto);//cria um contexto com o objeto criado
-               
+        [HttpPost]
+        public ActionResult Post(Produto produto)
+        {
+            try
+            {
+                if (produto is null)
+                {
+                    return BadRequest();
+                }
+                var NovoProduto = _unityOfWork.ProdutoRepository.Add(produto);//cria um contexto com o objeto criado
+                _unityOfWork.Commit();
 
-        //        //é usada normalmente em um endpoint POST, e ela está fazendo algo muito legal e RESTful: depois de criar um recurso,
-        //        //ela retorna um HTTP 201 Created com o link para acessar esse novo recurso.
-        //        return new CreatedAtRouteResult("ObterProduto", new { id = NovoProduto.ProdutoId }, NovoProduto);
-        //    }
-        //    catch (Exception)
-        //    {
+                //é usada normalmente em um endpoint POST, e ela está fazendo algo muito legal e RESTful: depois de criar um recurso,
+                //ela retorna um HTTP 201 Created com o link para acessar esse novo recurso.
+                return new CreatedAtRouteResult("ObterProduto", new { id = NovoProduto.ProdutoId }, NovoProduto);
+            }
+            catch (Exception)
+            {
 
-        //        return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
-        //    }
-            
-        //}
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+
+        }
         // /api/Produtos/id
         [HttpPut("{id:int}")]
         public ActionResult Put(int id,Produto produto)
@@ -114,7 +115,8 @@ namespace APICatalogo.Controllers
                 {
                     return BadRequest();
                 }
-                var produtoAtualizado = _repository.Update(produto);
+                var produtoAtualizado = _unityOfWork.ProdutoRepository.Update(produto);
+                _unityOfWork.Commit();
                 return Ok(produtoAtualizado);
             }
             catch (Exception)
@@ -129,12 +131,14 @@ namespace APICatalogo.Controllers
         public ActionResult Delete(int id) {
             try
             {
-                var produto = _repository.Get(x => x.ProdutoId == id);
+                var produto = _unityOfWork.ProdutoRepository.Get(x => x.ProdutoId == id);
                 if (produto is null)
                 {
                     return NotFound("Produto não encontrado");
                 }
-                return Ok(_repository.Delete(produto));
+                var produtoDeletado = _unityOfWork.ProdutoRepository.Delete(produto);
+                _unityOfWork.Commit();
+                return Ok();
 
             }
             catch (Exception)

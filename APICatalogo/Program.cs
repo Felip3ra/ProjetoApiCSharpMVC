@@ -40,6 +40,8 @@ builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
 
 builder.Services.AddScoped(typeof(IRepository<>),typeof(Repository<>));
 
+builder.Services.AddScoped<IUnityOfWork, UnitOfWork>();
+
 builder.Services.AddTransient<IMeuServico, MeuServico>();
 
 builder.Logging.AddProvider(new CustomLoggerProvider(new CustomLoggerProviderConfiguration
