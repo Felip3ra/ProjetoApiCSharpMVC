@@ -4,6 +4,7 @@ using APICatalogo.Models;
 using APICatalogo.Repositories;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 namespace APICatalogo.Controllers
@@ -87,6 +88,44 @@ namespace APICatalogo.Controllers
             }
             
         }
+
+        [HttpPatch("{id}/UpdatePartial")]
+        public ActionResult<ProdutoDTOUpdateResponse> Patch(int id, JsonPatchDocument<ProdutoDTOUpdateRequest> patchProdutoDTO)
+        {
+            try
+            {
+                if (patchProdutoDTO is null || id == 0)
+                {
+                    return BadRequest();
+                }
+                var produto = _unityOfWork.ProdutoRepository.Get(x => x.ProdutoId == id);
+
+                if (produto is null)
+                {
+                    return NotFound("Produto não encontrado");
+                }
+
+                var produtoAtualizadoRequest = _mapper.Map<ProdutoDTOUpdateRequest>(produto);
+                patchProdutoDTO.ApplyTo(produtoAtualizadoRequest, ModelState);
+
+                if (!ModelState.IsValid || !TryValidateModel(produtoAtualizadoRequest))
+                {
+                    return BadRequest(ModelState);
+                }
+
+                _mapper.Map(produtoAtualizadoRequest, produto);
+                _unityOfWork.ProdutoRepository.Update(produto);
+                _unityOfWork.Commit();
+                
+                return Ok(_mapper.Map<ProdutoDTOUpdateResponse>(produto));
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Ocorreu um problema ao tratar a solicitacao");
+            }
+
+        }
+
         //// /api/Produtos
         [HttpPost]
         public ActionResult<ProdutoDTO> Post(ProdutoDTO produtoDto)
